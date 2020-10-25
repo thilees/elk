@@ -1,0 +1,91 @@
+# ConfigMap for logstash configurations
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-configmap
+  namespace: elk
+data:
+  logstash.yml: |
+    http.host: "0.0.0.0"
+    path.config: /usr/share/logstash/pipeline
+  logstash.conf: |
+    input {
+     file {
+       path => ["/usr/share/logstash/sample.log"]}
+     }
+    filter {
+      if [message] =~ /^\{.*\}$/ {
+        json {
+          source => "message"
+        }
+      }
+      if [ClientHost] {
+        geoip {
+          source => "ClientHost"
+        }
+      }
+    }
+    output {
+        elasticsearch {
+            hosts => [ "elasticsearch:9200" ]
+        }
+    }
+
+# Deployment for logstash
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: logstash
+ namespace: elk
+ labels:
+  app: logstash
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   app: logstash
+ template:
+  metadata:
+   labels:
+    app: logstash
+  spec:
+   serviceAccountName: logstash
+   containers:
+   - name: backend
+     image: logstash:6.8.6
+     ports:
+     - containerPort: 5044
+     volumeMounts:
+     - name: config-volume
+       mountPath: /usr/share/logstash/config
+     - name: logstash-pipeline-volume
+       mountPath: /usr/share/logstash/pipeline
+   volumes:
+   - name: config-volume
+     configMap:
+      name: logstash-configmap
+      items:
+      - key: logstash.yml
+        path: logstash.yml
+   - name: logstash-pipeline-volume
+     configMap:
+      name: logstash-configmap
+      items:
+      - key: logstash.conf
+        path: logstash.conf
+
+# Service for logstash
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+ name: logstash
+ namespace: elk
+spec:
+ selector: 
+  app: logstash
+ ports:
+ - port: 5044 
+   targetPort: 5044
