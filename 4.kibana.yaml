@@ -1,0 +1,41 @@
+# Deployment for Kibanan service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: kibana
+ namespace: elk
+ labels:
+  app: kibana
+spec:
+ replicas: 1
+ selector:
+  matchLabels:
+   app: kibana
+ template:
+  metadata:
+   labels:
+    app: kibana
+  spec:
+   serviceAccountName: kibana
+   containers:
+   - name: kibana-frontend
+     image: kibana:6.8.6
+     ports:
+     - containerPort: 5601
+       name: gui
+       protocol: TCP
+
+---
+# Service for Kibana
+apiVersion: v1
+kind: Service
+metadata:
+ name: kibana
+ namespace: elk
+spec:
+ type: LoadBalancer
+ selector: 
+  app: kibana
+ ports:
+ - port: 80
+   targetPort: 5601
