@@ -1,0 +1,110 @@
+# Service accoutns, roles and rolebindings for the services
+# Edit the permission as required
+
+# The roles for ELK services 
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: elk
+  name: kibana-role
+rules:
+- apiGroups: ["", "extensions", "apps"]
+  resources: [""]
+  verbs: [""]
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: elk
+  name: es-role
+rules:
+- apiGroups: ["", "extensions", "apps"]
+  resources: [""]
+  verbs: [""] 
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: elk
+  name: logstash-role
+rules:
+- apiGroups: ["", "extensions", "apps"]
+  resources: [""]
+  verbs: [""]
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: kibana
+ namespace: elk
+ labels:
+  app: kibana
+
+
+# The service accoutns for ELK services
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: es
+ namespace: elk
+ labels:
+  app: es
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: logstash
+ namespace: elk
+ labels:
+  app: logstash
+
+# The rolebindings for the ELK services
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+ name: kibana
+ namespace: elk
+subjects:
+- kind: ServiceAccount
+  name: kibana
+  apiGroup: ""
+roleRef:
+ kind: Role
+ name: kibana-role
+ apiGroup: ""
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+ name: es
+ namespace: elk
+subjects:
+- kind: ServiceAccount
+  name: es
+  apiGroup: ""
+roleRef:
+ kind: Role
+ name: es-role
+ apiGroup: ""
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+ name: logstash
+ namespace: elk
+subjects:
+- kind: ServiceAccount
+  name: logstash
+  apiGroup: ""
+roleRef:
+ kind: Role
+ name: logstash-role
+ apiGroup: ""
